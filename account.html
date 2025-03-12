@@ -1,0 +1,150 @@
+<!-- account.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank of Vellorian - Account</title>
+  <!-- Global and page-specific styles -->
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/account.css" />
+</head>
+<body>
+  <!-- Navbar and Sub-navbar -->
+  <div class="navbar">
+    <div class="left">
+      <img src="images/bankLogo.jpg" alt="Bank Logo">
+      <h1><a href="account.html">BANK OF VELLORIAN</a></h1>
+    </div>
+    <div class="right">
+      <!-- Logout button replaces Login/Sign Up when logged in -->
+      <button id="nav-logout">Logout</button>
+    </div>
+  </div>
+  <div class="sub-navbar">
+    <a href="account.html">ACCOUNT</a>
+    <a href="#">LOANS</a>
+    <a href="#">INVESTMENTS</a>
+    <a href="#">INSURANCES</a>
+    <a href="#">PENSIONS</a>
+    <a href="#">OFFERS</a>
+    <a href="#">SUPPORT</a>
+    <div class="dropdown">
+      <button class="dropbtn">▼</button>
+      <div class="dropdown-content">
+        <a href="#">ATM</a>
+        <a href="#">NRI</a>
+        <a href="#">EMI</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Options Buttons -->
+  <div class="account-options">
+    <button>View Account Details</button>
+    <button onclick="window.location.href='sendMoney.html'">Send Money</button>
+    <button>Apply for Loan</button>
+    <button>View Transactions</button>
+    <button>File Complaint</button>
+  </div>
+
+  <!-- Account Information Windows -->
+  <div class="account-windows">
+    <!-- Left Window: Balance and options -->
+    <div class="window left-window">
+      <div class="balance-container">
+        <h2>BALANCE</h2>
+        <button class="balance-display">Loading...</button>
+      </div>
+      <div class="account-options-list">
+        <a href="#">Add Balance</a>
+        <a href="#">Change Password</a>
+        <a href="#">Settings</a>
+      </div>
+    </div>    
+    <!-- Right Window: Recent Transactions -->
+<div class="window right-window">
+  <h2>Recent Transactions</h2>
+  <div class="transactions-container">
+    <!-- Transaction boxes will be loaded dynamically here -->
+  </div>
+  <div class="view-more-container">
+    <button class="view-more-btn">View More</button>
+  </div>
+</div>
+
+
+  <script src="js/script.js"></script>
+  <script>
+    // When the account page loads, fetch the balance from the backend
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/balance');
+        if (response.ok) {
+          const data = await response.json();
+          // Format the balance in Indian style (e.g., 12,34,567)
+          const formattedBalance = new Intl.NumberFormat('en-IN').format(data.balance);
+          // Update the balance display button with the fetched and formatted balance
+          document.querySelector('.balance-display').textContent = '₹ ' + formattedBalance;
+        } else {
+          console.error('Could not fetch balance:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    });
+
+    // Handle Logout: send request to backend and then redirect to index.html
+    document.getElementById('nav-logout').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/logout', { method: 'POST' });
+        if (response.ok) {
+          window.location.href = 'index.html';
+        } else {
+          console.error('Logout failed:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
+    });
+  </script>
+  <script>
+    async function loadTransactions() {
+      try {
+        const response = await fetch('/transactions');
+        if (response.ok) {
+          const transactions = await response.json();
+          const container = document.querySelector('.transactions-container');
+          container.innerHTML = ""; // Clear any previous content
+  
+          transactions.forEach(txn => {
+            // Create a div for each transaction
+            const txnDiv = document.createElement("div");
+            txnDiv.classList.add("transaction-box");
+            // Add class based on transaction type: "credit" (green) or "debit" (red)
+            txnDiv.classList.add(txn.type.toLowerCase());
+  
+            // Build inner HTML using the transaction properties
+            txnDiv.innerHTML = `
+              <span class="trans-txnid">${txn.txn_id}</span>
+              <span class="trans-name">${txn.name}</span>
+              <span class="trans-datetime">${txn.dateTime}</span>
+              <span class="trans-type">${txn.type}</span>
+              <span class="trans-amount">₹${new Intl.NumberFormat('en-IN').format(txn.amount)}</span>
+            `;
+            container.appendChild(txnDiv);
+          });
+        } else {
+          console.error("Error fetching transactions:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    }
+    
+    // Call the function once the page loads
+    document.addEventListener("DOMContentLoaded", loadTransactions);
+  </script>
+  
+</body>
+</html>
